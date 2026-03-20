@@ -23,7 +23,10 @@
     "build:mac": "tsc && vite build && electron-builder --mac",
     "build:win": "tsc && vite build && electron-builder --win",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "patch": "npm version patch -m \"Bump up package version to %s\" && git push && git push origin --tags && npm publish",
+    "minor": "npm version minor -m \"Bump up package version to %s\" && git push && git push origin --tags && npm publish",
+    "major": "npm version major -m \"Bump up package version to %s\" && git push && git push origin --tags && npm publish"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",

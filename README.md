@@ -99,8 +99,8 @@ npm run build
 
 ## Technologies Used
 
-- **Framework**: [Electron](https://www.electronjs.org/), [React](https://react.dev/), [Vite](https://vitejs.dev/)
-- **Language**: TypeScript
+- **Frameworks**: [Electron](https://www.electronjs.org/), [React](https://react.dev/), [Vite](https://vitejs.dev/)
+- **Languages**: TypeScript
 - **Styling**: Vanilla CSS (CSS Variables, Flexbox/Grid, Animations)
 - **APIs**: [yahoo-finance2](https://github.com/gadicc/node-yahoo-finance2)
 - **Icons**: [Heroicons](https://heroicons.com/)
