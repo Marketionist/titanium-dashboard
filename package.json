@@ -1,6 +1,7 @@
 {
   "name": "titanium-dashboard",
   "version": "1.0.0",
+  "description": "Titanium Dashboard is a modern, cross-platform stock tracking dashboard",
   "type": "module",
   "engines": {
     "node": ">=22.x.x"
