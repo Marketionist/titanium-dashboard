@@ -1,4 +1,5 @@
 import { ArrowUpIcon, ArrowDownIcon } from "@heroicons/react/24/solid";
+import { TrashIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 
 export interface ChartDataPoint {
@@ -13,6 +14,7 @@ interface StockCardProps {
     changePercent: number;
     name?: string;
     chart?: ChartDataPoint[];
+    onRemove: () => void;
 }
 
 function Sparkline({
@@ -47,12 +49,27 @@ function Sparkline({
 
     const polylinePoints = points.map((p) => `${p.x},${p.y}`).join(" ");
 
+    const firstDate = new Date(data[0].date);
+    const lastDate = new Date(data[data.length - 1].date);
+    const diffMs = lastDate.getTime() - firstDate.getTime();
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
     const formatDate = (ds: string) => {
         const d = new Date(ds);
-        return d.toLocaleDateString(undefined, {
-            month: "numeric",
-            day: "numeric",
-        });
+        let options: Intl.DateTimeFormatOptions;
+
+        if (diffDays < 1.5) {
+            // Intraday
+            options = { hour: "numeric", minute: "2-digit" };
+        } else if (diffDays > 300) {
+            // 1 Year+
+            options = { month: "numeric", day: "numeric", year: "2-digit" };
+        } else {
+            // 30 Days
+            options = { month: "numeric", day: "numeric" };
+        }
+
+        return d.toLocaleDateString(undefined, options);
     };
 
     return (
@@ -60,7 +77,7 @@ function Sparkline({
             width="100%"
             height="auto"
             viewBox={`${viewBoxX} ${viewBoxY} ${viewBoxW} ${viewBoxH}`}
-            style={{ overflow: "visible" }}
+            className="sparkline-svg"
         >
             {showAxes && (
                 <>
@@ -115,7 +132,7 @@ function Sparkline({
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                style={{ filter: "drop-shadow(0px 2px 4px rgba(0,0,0,0.3))" }}
+                className="sparkline-path"
             />
             {points.map((p, i) => (
                 <circle
@@ -134,7 +151,7 @@ function Sparkline({
                     r="6"
                     fill="transparent"
                     stroke="transparent"
-                    style={{ cursor: "crosshair", pointerEvents: "all" }}
+                    className="sparkline-hit-area"
                 >
                     <title>{`Price: $${p.val.close.toFixed(2)}\nDate: ${new Date(p.val.date).toLocaleString()}`}</title>
                 </circle>
@@ -150,6 +167,7 @@ export function StockCard({
     changePercent,
     name,
     chart,
+    onRemove,
 }: StockCardProps) {
     const [isFlipped, setIsFlipped] = useState(false);
     const [history30d, setHistory30d] = useState<ChartDataPoint[] | null>(null);
@@ -158,6 +176,18 @@ export function StockCard({
     const [show1Year, setShow1Year] = useState(false);
 
     const isPositive = change >= 0;
+
+    const historicalData = show1Year ? history1y : history30d;
+    let historicalChange = 0;
+    let absoluteHistoricalChange = 0;
+    if (historicalData && historicalData.length >= 2) {
+        const start = historicalData[0].close;
+        const end = historicalData[historicalData.length - 1].close;
+        historicalChange = ((end - start) / start) * 100;
+        absoluteHistoricalChange = end - start;
+    }
+
+    const isHistoricalPositive = historicalChange >= 0;
 
     const handleFlip = async () => {
         setIsFlipped(!isFlipped);
@@ -192,7 +222,7 @@ export function StockCard({
                 <div className="card-front">
                     <div className="stock-header">
                         <div>
-                            <div className="stock-symbol">{symbol}</div>
+                            <div className="stock-symbol metallic-gold">{symbol}</div>
                             {name && (
                                 <div className="stock-name" title={name}>
                                     {name}
@@ -214,29 +244,34 @@ export function StockCard({
                                 />
                             )}
                             <span>
-                                {Math.abs(change).toFixed(2)} (
-                                {Math.abs(changePercent).toFixed(2)}%)
+                                {(typeof change === 'number' ? Math.abs(change) : 0).toFixed(2)} (
+                                {(typeof changePercent === 'number' ? Math.abs(changePercent) : 0).toFixed(2)}%)
                             </span>
                         </div>
                     </div>
                     <div
-                        className="stock-price"
-                        style={{
-                            marginBottom: "1.5rem",
-                            paddingBottom: "0.8rem",
-                            borderBottom: "1px dashed rgba(255,255,255,0.1)",
-                        }}
+                        className="stock-price stock-price-decorated"
                     >
-                        ${price.toFixed(2)}
+                        {typeof price === "number" ? (
+                            <span className="metallic-gold">{`$${price.toFixed(2)}`}</span>
+                        ) : (
+                            <div className="na-container">
+                                <span className="metallic-gold">N/A</span>
+                                    <button
+                                        className="btn-remove icon-btn"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onRemove();
+                                        }}
+                                        title="Remove this ticker"
+                                    >
+                                        <TrashIcon />
+                                    </button>
+                            </div>
+                        )}
                     </div>
                     {chart && chart.length > 0 && (
-                        <div
-                            style={{
-                                width: "100%",
-                                opacity: 0.95,
-                                paddingTop: "0.5rem",
-                            }}
-                        >
+                        <div className="sparkline-container sparkline-container-front">
                             <Sparkline
                                 data={chart}
                                 color={
@@ -255,33 +290,19 @@ export function StockCard({
                 {/* BACK OF CARD */}
                 <div className="card-back">
                     {isLoadingHistory ? (
-                        <div
-                            className="loader"
-                            style={{ width: 20, height: 20 }}
-                        ></div>
+                        <div className="loader"></div>
                     ) : (
                         <>
-                            <div
-                                style={{
-                                    position: "absolute",
-                                    top: 15,
-                                    left: 15,
-                                    fontSize: "0.85rem",
-                                    color: "var(--text-secondary)",
-                                }}
-                            >
-                                {symbol} • {show1Year ? "1 Year" : "30 Days"}
+                            <div className="card-back-header">
+                                <div className="card-back-subtitle">
+                                    {symbol} •{" "}
+                                    {show1Year ? "1 Year" : "30 Days"}
+                                </div>
                             </div>
 
-                            <div
-                                style={{
-                                    width: "100%",
-                                    opacity: 0.95,
-                                    paddingTop: "10px",
-                                }}
-                            >
+                            <div className="sparkline-container sparkline-container-back">
                                 {(show1Year ? history1y : history30d) &&
-                                (show1Year ? history1y : history30d)!.length >
+                                    (show1Year ? history1y : history30d)!.length >
                                     0 ? (
                                     <Sparkline
                                         data={
@@ -297,28 +318,14 @@ export function StockCard({
                                         height={80}
                                     />
                                 ) : (
-                                    <span
-                                        style={{
-                                            fontSize: "0.875rem",
-                                            color: "var(--text-muted)",
-                                        }}
-                                    >
+                                    <span className="card-back-empty">
                                         No historical data
                                     </span>
                                 )}
                             </div>
 
                             <div
-                                style={{
-                                    position: "absolute",
-                                    bottom: 15,
-                                    right: 15,
-                                    fontSize: "0.75rem",
-                                    color: "var(--accent-primary)",
-                                    cursor: "pointer",
-                                    zIndex: 10,
-                                    padding: "5px",
-                                }}
+                                className="card-back-toggle"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     setShow1Year(!show1Year);
@@ -327,18 +334,26 @@ export function StockCard({
                                 {show1Year ? "Show 30 Days" : "Show 1 Year"}
                             </div>
 
-                            <div
-                                style={{
-                                    position: "absolute",
-                                    top: 15,
-                                    right: 15,
-                                    fontSize: "0.7rem",
-                                    color: "var(--text-muted)",
-                                    cursor: "pointer",
-                                }}
-                            >
-                                Click to flip
-                            </div>
+                            {historicalData && historicalData.length >= 2 && (
+                                <div className={`stock-change ${isHistoricalPositive ? "positive" : "negative"} card-back-perf`}>
+                                    {isHistoricalPositive ? (
+                                        <ArrowUpIcon
+                                            style={{ width: 14, height: 14 }}
+                                        />
+                                    ) : (
+                                        <ArrowDownIcon
+                                            style={{ width: 14, height: 14 }}
+                                        />
+                                    )}
+                                    <span>
+                                        {Math.abs(
+                                            absoluteHistoricalChange,
+                                        ).toFixed(2)}{" "}
+                                        ({Math.abs(historicalChange).toFixed(2)}
+                                        %)
+                                    </span>
+                                </div>
+                            )}
                         </>
                     )}
                 </div>

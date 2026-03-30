@@ -11,7 +11,7 @@ const getDefaultTickers = (): string[] => {
             .map((s) => s.trim())
             .filter(Boolean);
     }
-    return ["VOO", "VGT", "IBIT", "IAUM"];
+    return ["VOO", "VGT", "IBIT", "IAUM", "USDCAD=X"];
 };
 
 function App() {
@@ -20,12 +20,15 @@ function App() {
     const [quotes, setQuotes] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+    const [hasError, setHasError] = useState<boolean>(false);
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+    const [timezone, setTimezone] = useState<string>("Local");
 
     // Load state from localStorage on mount
     useEffect(() => {
         const storedTickers = localStorage.getItem("dashboard_tickers");
         const storedRate = localStorage.getItem("dashboard_refreshRate");
+        const storedTimezone = localStorage.getItem("dashboard_timezone");
 
         if (storedTickers) {
             setTickers(JSON.parse(storedTickers));
@@ -36,6 +39,10 @@ function App() {
 
         if (storedRate) {
             setRefreshRate(Number(storedRate));
+        }
+
+        if (storedTimezone) {
+            setTimezone(storedTimezone);
         }
     }, []);
 
@@ -49,18 +56,21 @@ function App() {
 
         const fetchData = async () => {
             setIsLoading(true);
+            setHasError(false);
             try {
                 const ipcRenderer = (window as any).ipcRenderer;
                 if (ipcRenderer && ipcRenderer.invoke) {
                     const results = await ipcRenderer.invoke(
                         "get-stock-quotes",
                         tickers,
+                        timezone,
                     );
                     setQuotes(results);
                     setLastUpdated(new Date());
                 }
             } catch (error) {
                 console.error("Failed to fetch quotes:", error);
+                setHasError(true);
             } finally {
                 setIsLoading(false);
             }
@@ -70,30 +80,35 @@ function App() {
 
         const interval = setInterval(fetchData, refreshRate * 1000);
         return () => clearInterval(interval);
-    }, [tickers, refreshRate]);
+    }, [tickers, refreshRate, timezone]);
 
-    const handleAddTicker = (symbol: string) => {
-        const newTickers = [...tickers, symbol];
+    const handleSaveSettings = (
+        newTickers: string[],
+        newRate: number,
+        newTimezone: string,
+    ) => {
         setTickers(newTickers);
+        setRefreshRate(newRate);
+        setTimezone(newTimezone);
         localStorage.setItem("dashboard_tickers", JSON.stringify(newTickers));
+        localStorage.setItem("dashboard_refreshRate", newRate.toString());
+        localStorage.setItem("dashboard_timezone", newTimezone);
+        setIsSettingsOpen(false);
+    };
+
+    const handleResetStorage = () => {
+        localStorage.removeItem("dashboard_tickers");
+        localStorage.removeItem("dashboard_refreshRate");
+        localStorage.removeItem("dashboard_timezone");
+        setTickers(getDefaultTickers());
+        setRefreshRate(10);
+        setTimezone("Local");
     };
 
     const handleRemoveTicker = (symbol: string) => {
         const newTickers = tickers.filter((t) => t !== symbol);
         setTickers(newTickers);
         localStorage.setItem("dashboard_tickers", JSON.stringify(newTickers));
-    };
-
-    const handleUpdateRate = (rate: number) => {
-        setRefreshRate(rate);
-        localStorage.setItem("dashboard_refreshRate", rate.toString());
-    };
-
-    const handleResetStorage = () => {
-        localStorage.removeItem("dashboard_tickers");
-        localStorage.removeItem("dashboard_refreshRate");
-        setTickers(getDefaultTickers());
-        setRefreshRate(10);
     };
 
     return (
@@ -105,7 +120,7 @@ function App() {
                         width="32"
                         height="32"
                         alt="Titanium Dashboard Logo"
-                        style={{ borderRadius: "6px" }}
+                        className="app-logo"
                     />
                     Titanium Dashboard
                 </h1>
@@ -118,7 +133,19 @@ function App() {
             </header>
 
             <main>
-                {isLoading && quotes.length === 0 ? (
+                {hasError && quotes.length === 0 ? (
+                    <div className="loader-container">
+                        <div className="error-message">
+                            Unable to load market data
+                        </div>
+                        <button
+                            className="btn-primary btn-centered btn-danger-recovery"
+                            onClick={handleResetStorage}
+                        >
+                            Reset all storage
+                        </button>
+                    </div>
+                ) : isLoading && quotes.length === 0 ? (
                     <div className="loader-container">
                         <div className="loader"></div>
                         <div>Loading market data...</div>
@@ -134,6 +161,7 @@ function App() {
                                 change={quote.regularMarketChange}
                                 changePercent={quote.regularMarketChangePercent}
                                 chart={quote.chart}
+                                onRemove={() => handleRemoveTicker(quote.symbol)}
                             />
                         ))}
                         {quotes.length === 0 && !isLoading && (
@@ -144,9 +172,8 @@ function App() {
                                     get started.
                                 </p>
                                 <button
-                                    className="btn-primary"
+                                    className="btn-primary btn-centered"
                                     onClick={() => setIsSettingsOpen(true)}
-                                    style={{ margin: "0 auto" }}
                                 >
                                     Open Settings
                                 </button>
@@ -168,9 +195,8 @@ function App() {
                 onClose={() => setIsSettingsOpen(false)}
                 tickers={tickers}
                 refreshRate={refreshRate}
-                onAddTicker={handleAddTicker}
-                onRemoveTicker={handleRemoveTicker}
-                onUpdateRate={handleUpdateRate}
+                timezone={timezone}
+                onSave={handleSaveSettings}
                 onReset={handleResetStorage}
             />
         </>
