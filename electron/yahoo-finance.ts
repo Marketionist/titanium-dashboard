@@ -51,23 +51,35 @@ class CrumbManager {
                 }
 
                 // 2. Fetch the crumb using the cookie
-                const crumbResponse = await fetch(
-                    "https://query1.finance.yahoo.com/v1/test/getcrumb",
-                    {
-                        headers: {
-                            ...BASE_HEADERS,
-                            Cookie: this.cookie || "",
+                let crumbResponse: Response | null = null;
+                for (let attempt = 0; attempt < 3; attempt++) {
+                    crumbResponse = await fetch(
+                        "https://query1.finance.yahoo.com/v1/test/getcrumb",
+                        {
+                            headers: {
+                                ...BASE_HEADERS,
+                                Cookie: this.cookie || "",
+                            },
                         },
-                    },
-                );
+                    );
 
-                if (!crumbResponse.ok) {
-                    throw new Error(`Failed to fetch crumb: ${crumbResponse.statusText}`);
+                    if (crumbResponse.ok) {
+                        break;
+                    }
+
+                    console.log(`Failed to fetch crumb (${crumbResponse.status}). Retrying in 1000ms...`);
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                 }
 
-                this.crumb = await crumbResponse.text();
-                this.lastRefresh = Date.now();
-                console.log(`Successfully refreshed Yahoo crumb: ${this.crumb ? "***" : "FAILED"}`);
+                if (!crumbResponse || !crumbResponse.ok) {
+                    console.warn(`Warning: Failed to fetch crumb: ${crumbResponse?.statusText || "Unknown"}. Proceeding without it...`);
+                    this.crumb = null;
+                    this.lastRefresh = Date.now();
+                } else {
+                    this.crumb = await crumbResponse.text();
+                    this.lastRefresh = Date.now();
+                    console.log(`Successfully refreshed Yahoo crumb: ${this.crumb ? "***" : "FAILED"}`);
+                }
             } catch (error) {
                 console.error("Error refreshing Yahoo crumb:", error);
                 throw error;
