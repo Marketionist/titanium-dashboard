@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Cog6ToothIcon } from "@heroicons/react/24/solid";
+import { Cog6ToothIcon, BoltIcon, BoltSlashIcon } from "@heroicons/react/24/solid";
 import { StockCard } from "./components/StockCard";
 import { SettingsModal } from "./components/SettingsModal";
 
@@ -23,6 +23,20 @@ function App() {
     const [hasError, setHasError] = useState<boolean>(false);
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
     const [timezone, setTimezone] = useState<string>("Local");
+    const [isTeslaMode, setIsTeslaMode] = useState<boolean>(false);
+
+    // Keyboard shortcut for Tesla Mode
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.code === 'Space' && e.target === document.body) {
+                e.preventDefault();
+                setIsTeslaMode(prev => !prev);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
 
     // Load state from localStorage on mount
     useEffect(() => {
@@ -124,16 +138,51 @@ function App() {
                     />
                     Titanium Dashboard
                 </h1>
-                <button
-                    className="icon-btn"
-                    onClick={() => setIsSettingsOpen(true)}
-                >
-                    <Cog6ToothIcon style={{ width: 20, height: 20 }} />
-                </button>
+                <div className="header-actions">
+                    <button
+                        className="icon-btn"
+                        onClick={() => setIsTeslaMode(!isTeslaMode)}
+                        title={isTeslaMode ? "Disable Tesla Mode" : "Enable Tesla Mode"}
+                    >
+                        {isTeslaMode ? (
+                            <BoltSlashIcon style={{ width: 20, height: 20 }} />
+                        ) : (
+                            <BoltIcon style={{ width: 20, height: 20 }} />
+                        )}
+                    </button>
+                    <button
+                        className="icon-btn"
+                        onClick={() => setIsSettingsOpen(true)}
+                    >
+                        <Cog6ToothIcon style={{ width: 20, height: 20 }} />
+                    </button>
+                </div>
             </header>
 
             <main>
-                {hasError && quotes.length === 0 ? (
+                {isTeslaMode ? (
+                    <div className="tesla-mode-container">
+                        <svg width="0" height="0" style={{ position: 'absolute' }}>
+                            <filter id="lightning-wobble">
+                                <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" result="noise">
+                                    <animate attributeName="baseFrequency" values="0.04 0.04; 0.05 0.05; 0.04 0.04" dur="2s" repeatCount="indefinite" />
+                                </feTurbulence>
+                                <feDisplacementMap in="SourceGraphic" in2="noise" scale="35" xChannelSelector="R" yChannelSelector="G" />
+                            </filter>
+                        </svg>
+                        <div className="tesla-sphere">
+                            <div className="tesla-core"></div>
+                            <div className="plasma-ray ray-1"></div>
+                            <div className="plasma-ray ray-2"></div>
+                            <div className="plasma-ray ray-3"></div>
+                            <div className="plasma-ray ray-4"></div>
+                            <div className="plasma-ray ray-5"></div>
+                            <div className="plasma-ray ray-6"></div>
+                            <div className="plasma-ray ray-7"></div>
+                            <div className="plasma-ray ray-8"></div>
+                        </div>
+                    </div>
+                ) : hasError && quotes.length === 0 ? (
                     <div className="loader-container">
                         <div className="error-message">
                             Unable to load market data
@@ -182,7 +231,7 @@ function App() {
                     </div>
                 )}
 
-                {lastUpdated && quotes.length > 0 && (
+                {!isTeslaMode && lastUpdated && quotes.length > 0 && (
                     <div className="last-updated">
                         Last updated: {lastUpdated.toLocaleTimeString()}{" "}
                         (Updates every {refreshRate}s)
