@@ -35,7 +35,7 @@ use those tickers as your default dashboard!
 
 ## Requirements
 
-- Node.js (22 or newer recommended)
+- Node.js (24 or newer recommended)
 - npm (Node Package Manager)
 
 ## Installation Instructions
