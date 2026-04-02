@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { XMarkIcon, TrashIcon, PlusIcon, CheckIcon } from "@heroicons/react/24/outline";
+import { useState, type FormEvent } from 'react';
+import { XMarkIcon, TrashIcon, PlusIcon, CheckIcon } from '@heroicons/react/24/outline';
 
 interface SettingsModalProps {
     isOpen: boolean;
@@ -11,7 +11,7 @@ interface SettingsModalProps {
     onReset: () => void;
 }
 
-export function SettingsModal({
+export function SettingsModal ({
     isOpen,
     onClose,
     tickers,
@@ -20,37 +20,30 @@ export function SettingsModal({
     onSave,
     onReset,
 }: SettingsModalProps) {
-    const [newTicker, setNewTicker] = useState("");
-    const [localTickers, setLocalTickers] = useState<string[]>(tickers);
-    const [localRate, setLocalRate] = useState<number>(refreshRate);
-    const [localTimezone, setLocalTimezone] = useState<string>(timezone);
+    const [newTicker, setNewTicker,] = useState('');
+    const [localTickers, setLocalTickers,] = useState<string[]>(tickers);
+    const [localRate, setLocalRate,] = useState<number>(refreshRate);
+    const [localTimezone, setLocalTimezone,] = useState<string>(timezone);
 
-    // Sync local state when modal opens
-    useEffect(() => {
-        if (isOpen) {
-            setLocalTickers(tickers);
-            setLocalRate(refreshRate);
-            setLocalTimezone(timezone);
-        }
-    }, [isOpen, tickers, refreshRate, timezone]);
+    if (!isOpen) { return null; }
 
-    if (!isOpen) return null;
-
-    const handleAdd = (e: React.FormEvent) => {
+    const handleAdd = (e: FormEvent) => {
         e.preventDefault();
         const symbols = newTicker
-            .split(",")
+            .split(',')
             .map((s) => s.trim().toUpperCase())
             .filter(Boolean);
+
         if (symbols.length > 0) {
             const addedSymbols = symbols.filter(
-                (s) => !localTickers.includes(s),
+                (s) => !localTickers.includes(s)
             );
+
             if (addedSymbols.length > 0) {
-                setLocalTickers([...localTickers, ...addedSymbols]);
+                setLocalTickers([...localTickers, ...addedSymbols,]);
             }
         }
-        setNewTicker("");
+        setNewTicker('');
     };
 
     const handleRemoveLocal = (symbol: string) => {
@@ -62,7 +55,7 @@ export function SettingsModal({
     };
 
     return (
-        <div 
+        <div
             className="modal-overlay"
             onClick={(e) => {
                 if (e.target === e.currentTarget) {
@@ -76,12 +69,14 @@ export function SettingsModal({
                     <button
                         className="icon-btn"
                         onClick={onClose}
+                        title="Close Settings"
+                        aria-label="Close Settings"
                     >
                         <XMarkIcon />
                     </button>
                 </div>
 
-                <div className="form-group" style={{ marginBottom: "1.5rem" }}>
+                <div className="form-group" style={{ marginBottom: '1.5rem', }}>
                     <label>Dashboard Timezone</label>
                     <select
                         value={localTimezone}
@@ -89,41 +84,41 @@ export function SettingsModal({
                     >
                         {[
                             {
-                                value: "Local",
-                                label: "Local (System Default)",
+                                value: 'Local',
+                                label: 'Local (System Default)',
                             },
                             {
-                                value: "America/New_York",
-                                label: "New York (Eastern Time)",
+                                value: 'America/New_York',
+                                label: 'New York (Eastern Time)',
                             },
                             {
-                                value: "Europe/London",
-                                label: "London (Greenwich Mean Time)",
+                                value: 'Europe/London',
+                                label: 'London (Greenwich Mean Time)',
                             },
                             {
-                                value: "Asia/Tokyo",
-                                label: "Tokyo (Japan Standard Time)",
+                                value: 'Asia/Tokyo',
+                                label: 'Tokyo (Japan Standard Time)',
                             },
                             {
-                                value: "Asia/Shanghai",
-                                label: "Shanghai (China Standard Time)",
+                                value: 'Asia/Shanghai',
+                                label: 'Shanghai (China Standard Time)',
                             },
                             {
-                                value: "Australia/Sydney",
-                                label: "Sydney (Australian Eastern Time)",
+                                value: 'Australia/Sydney',
+                                label: 'Sydney (Australian Eastern Time)',
                             },
                         ].map((tz) => {
-                            let offset = new Intl.DateTimeFormat("en-US", {
+                            let offset = new Intl.DateTimeFormat('en-US', {
                                 timeZone:
-                                    tz.value === "Local" ? undefined : tz.value,
-                                timeZoneName: "shortOffset",
+                                    tz.value === 'Local' ? undefined : tz.value,
+                                timeZoneName: 'shortOffset',
                             })
                                 .formatToParts(new Date())
-                                .find((p) => p.type === "timeZoneName")
-                                ?.value.replace("GMT", "UTC") || "UTC+0";
+                                .find((p) => p.type === 'timeZoneName')
+                                ?.value.replace('GMT', 'UTC') || 'UTC+0';
 
                             // Ensure UTC+0 format instead of just UTC
-                            if (offset === "UTC") offset = "UTC+0";
+                            if (offset === 'UTC') { offset = 'UTC+0'; }
 
                             return (
                                 <option key={tz.value} value={tz.value}>
@@ -135,18 +130,19 @@ export function SettingsModal({
                     <div className="settings-hint">
                         {(() => {
                             const resolvedTz =
-                                localTimezone === "Local"
-                                    ? Intl.DateTimeFormat().resolvedOptions()
-                                          .timeZone
-                                    : localTimezone;
-                            let off = new Intl.DateTimeFormat("en-US", {
+                                localTimezone === 'Local' ?
+                                    new Intl.DateTimeFormat().resolvedOptions()
+                                        .timeZone :
+                                    localTimezone;
+                            let off = new Intl.DateTimeFormat('en-US', {
                                 timeZone: resolvedTz,
-                                timeZoneName: "shortOffset",
+                                timeZoneName: 'shortOffset',
                             })
                                 .formatToParts(new Date())
-                                .find((p) => p.type === "timeZoneName")
-                                ?.value.replace("GMT", "UTC") || "UTC+0";
-                            if (off === "UTC") off = "UTC+0";
+                                .find((p) => p.type === 'timeZoneName')
+                                ?.value.replace('GMT', 'UTC') || 'UTC+0';
+
+                            if (off === 'UTC') { off = 'UTC+0'; }
                             return `Current: ${resolvedTz} (${off})`;
                         })()}
                     </div>
@@ -170,20 +166,26 @@ export function SettingsModal({
                     <label>
                         Manage Tickers (comma separated to add multiple)
                     </label>
-                    <form className="input-flex" onSubmit={handleAdd}>
+                    <form className="input-flex" onSubmit={handleAdd} autoComplete="off">
                         <input
                             type="text"
                             placeholder="e.g. AAPL, NVDA"
                             value={newTicker}
                             onChange={(e) => setNewTicker(e.target.value)}
+                            autoComplete="off"
                         />
-                        <button type="submit" className="icon-btn">
+                        <button
+                            type="submit"
+                            className="icon-btn"
+                            title="Add Ticker"
+                            aria-label="Add Ticker"
+                        >
                             <PlusIcon />
                         </button>
                     </form>
 
                     <div className="ticker-list">
-                        {localTickers.map((ticker) => (
+                        {localTickers.map((ticker) =>
                             <div key={ticker} className="ticker-item">
                                 <span className="ticker-item-text metallic-gold">
                                     {ticker}
@@ -191,16 +193,18 @@ export function SettingsModal({
                                 <button
                                     className="btn-remove icon-btn"
                                     onClick={() => handleRemoveLocal(ticker)}
+                                    title="Remove Ticker"
+                                    aria-label="Remove Ticker"
                                 >
                                     <TrashIcon />
                                 </button>
                             </div>
-                        ))}
-                        {localTickers.length === 0 && (
+                        )}
+                        {localTickers.length === 0 &&
                             <div className="ticker-empty-msg">
                                 No tickers added.
                             </div>
-                        )}
+                        }
                     </div>
                 </div>
 
@@ -208,18 +212,22 @@ export function SettingsModal({
                     <button
                         className="btn-remove icon-btn"
                         onClick={() => {
-                            if (
-                                window.confirm(
-                                    "Are you sure you want to reset all storage?",
-                                )
-                            ) {
+                            // eslint-disable-next-line no-alert
+                            if (window.confirm('Are you sure you want to reset all storage?')) {
                                 onReset();
                             }
                         }}
+                        title="Reset All Storage"
+                        aria-label="Reset All Storage"
                     >
                         <TrashIcon />
                     </button>
-                    <button className="icon-btn" onClick={handleSave}>
+                    <button
+                        className="icon-btn"
+                        onClick={handleSave}
+                        title="Save Settings"
+                        aria-label="Save Settings"
+                    >
                         <CheckIcon />
                     </button>
                 </div>
