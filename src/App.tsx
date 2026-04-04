@@ -191,8 +191,8 @@ function App () {
                     <button
                         className="btn-primary btn-centered btn-danger-recovery"
                         onClick={handleResetStorage}
-                        title="Reset All Storage"
-                        aria-label="Reset All Storage"
+                        title="Reset all storage"
+                        aria-label="Reset all storage"
                     >
                         Reset all storage
                     </button>
@@ -230,8 +230,8 @@ function App () {
                         <button
                             className="btn-primary btn-centered"
                             onClick={() => setIsSettingsOpen(true)}
-                            title="Open Settings"
-                            aria-label="Open Settings"
+                            title="Open settings"
+                            aria-label="Open settings"
                         >
                             Open Settings
                         </button>
@@ -261,8 +261,8 @@ function App () {
                     <button
                         className="icon-btn"
                         onClick={() => setIsTeslaMode(!isTeslaMode)}
-                        title={isTeslaMode ? 'Disable Tesla Mode' : 'Enable Tesla Mode'}
-                        aria-label={isTeslaMode ? 'Disable Tesla Mode' : 'Enable Tesla Mode'}
+                        title={isTeslaMode ? 'Disable tesla mode' : 'Enable tesla mode'}
+                        aria-label={isTeslaMode ? 'Disable tesla mode' : 'Enable tesla mode'}
                     >
                         {isTeslaMode ?
                             <BoltSlashIcon style={{ width: ICON_SIZE, height: ICON_SIZE, }} /> :
@@ -272,8 +272,8 @@ function App () {
                     <button
                         className="icon-btn"
                         onClick={() => setIsSettingsOpen(true)}
-                        title="Open Settings"
-                        aria-label="Open Settings"
+                        title="Open settings"
+                        aria-label="Open settings"
                     >
                         <Cog6ToothIcon style={{ width: ICON_SIZE, height: ICON_SIZE, }} />
                     </button>

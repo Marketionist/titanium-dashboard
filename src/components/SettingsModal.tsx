@@ -69,8 +69,8 @@ export function SettingsModal ({
                     <button
                         className="icon-btn"
                         onClick={onClose}
-                        title="Close Settings"
-                        aria-label="Close Settings"
+                        title="Close settings"
+                        aria-label="Close settings"
                     >
                         <XMarkIcon />
                     </button>
@@ -177,8 +177,8 @@ export function SettingsModal ({
                         <button
                             type="submit"
                             className="icon-btn"
-                            title="Add Ticker"
-                            aria-label="Add Ticker"
+                            title="Add ticker"
+                            aria-label="Add ticker"
                         >
                             <PlusIcon />
                         </button>
@@ -193,8 +193,8 @@ export function SettingsModal ({
                                 <button
                                     className="btn-remove icon-btn"
                                     onClick={() => handleRemoveLocal(ticker)}
-                                    title="Remove Ticker"
-                                    aria-label="Remove Ticker"
+                                    title="Remove ticker"
+                                    aria-label="Remove ticker"
                                 >
                                     <TrashIcon />
                                 </button>
@@ -217,16 +217,16 @@ export function SettingsModal ({
                                 onReset();
                             }
                         }}
-                        title="Reset All Storage"
-                        aria-label="Reset All Storage"
+                        title="Reset all storage"
+                        aria-label="Reset all storage"
                     >
                         <TrashIcon />
                     </button>
                     <button
                         className="icon-btn"
                         onClick={handleSave}
-                        title="Save Settings"
-                        aria-label="Save Settings"
+                        title="Save settings"
+                        aria-label="Save settings"
                     >
                         <CheckIcon />
                     </button>
