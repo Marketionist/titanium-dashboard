@@ -185,8 +185,8 @@ function CardFront (props: StockCardProps) {
                                 e.stopPropagation();
                                 onRemove();
                             }}
-                            title="Remove Ticker"
-                            aria-label="Remove Ticker"
+                            title="Remove ticker"
+                            aria-label="Remove ticker"
                         >
                             <TrashIcon />
                         </button>
